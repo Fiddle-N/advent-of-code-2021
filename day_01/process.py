@@ -9,9 +9,8 @@ def count_depth(depths, window=None):
     if window is not None:
         depths = [sum(window) for window in more_itertools.windowed(depths, 3)]
     increasing = sum(
-        True
+        depth_pair[1] > depth_pair[0]
         for depth_pair in itertools.pairwise(depths)
-        if depth_pair[1] - depth_pair[0] > 0
     )
     return increasing
 
