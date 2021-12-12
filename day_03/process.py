@@ -28,23 +28,23 @@ def rating_search(numbers, bit_criteria: Ratings):
     while True:
         numbers_t = list(zip(*numbers))
         bit_values = statistics.multimode(numbers_t[pos])
-        match bit_values:
-            case (_, _):
-                if bit_criteria == Ratings.OXYGEN_GENERATOR:
-                    bit_value = '1'
-                elif bit_criteria == Ratings.CO2_SCRUBBER:
-                    bit_value = '0'
-                else:
-                    raise Exception
-            case (x,):
-                if bit_criteria == Ratings.OXYGEN_GENERATOR:
-                    bit_value = x
-                elif bit_criteria == Ratings.CO2_SCRUBBER:
-                    bit_value = {'0': '1', '1': '0'}[x]
-                else:
-                    raise Exception
-            case _:
+        if len(bit_values) == 2:
+            if bit_criteria == Ratings.OXYGEN_GENERATOR:
+                bit_value = '1'
+            elif bit_criteria == Ratings.CO2_SCRUBBER:
+                bit_value = '0'
+            else:
                 raise Exception
+        elif len(bit_values) == 1:
+            raw_bit_value, = bit_values
+            if bit_criteria == Ratings.OXYGEN_GENERATOR:
+                bit_value = raw_bit_value
+            elif bit_criteria == Ratings.CO2_SCRUBBER:
+                bit_value = {'0': '1', '1': '0'}[raw_bit_value]
+            else:
+                raise Exception
+        else:
+            raise Exception
         numbers = [number for number in numbers if number[pos] == bit_value]
         if len(numbers) == 1:
             result, = numbers
