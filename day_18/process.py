@@ -1,9 +1,39 @@
-import ast
 import collections
 import dataclasses
 import itertools
 import math
 import typing
+
+import lark
+
+
+SNAILFISH_NO_GRAMMAR = r"""
+    ?start : list
+
+    list   : "[" [value ("," value)*] "]"
+    ?value : list 
+           | INT  -> integer
+
+    %import common.INT
+    %import common.WS
+    %ignore WS
+"""
+
+
+class SnailfishNoParserTransformer(lark.Transformer):
+    list = list
+    integer = lark.v_args(inline=True)(int)
+
+
+sf_parser = lark.Lark(
+    SNAILFISH_NO_GRAMMAR,
+    parser="lalr",
+    maybe_placeholders=False,
+    transformer=SnailfishNoParserTransformer(),
+)
+
+
+sf_parse = sf_parser.parse
 
 
 @dataclasses.dataclass(frozen=True)
@@ -14,7 +44,6 @@ class SnailfishElement:
     def __add__(self, other: int):
         assert isinstance(other, int)
         return SnailfishElement(self.no + other, self.lvl)
-
 
 
 class SnailfishNumber:
@@ -43,6 +72,10 @@ class SnailfishNumber:
     @classmethod
     def from_list(cls, list_):
         return cls(cls._flatten(list_))
+
+    @classmethod
+    def from_str(cls, line_str):
+        return cls.from_list(sf_parse(line_str))
 
     def _explode(self):
         while self._number:
@@ -122,7 +155,7 @@ class SnailfishNumber:
 def sf_homework_part_1(homework):
     result = None
     for line in homework.split():
-        sf_number = SnailfishNumber.from_list(ast.literal_eval(line))
+        sf_number = SnailfishNumber.from_str(line)
         if result is None:
             result = sf_number
         else:
@@ -132,7 +165,7 @@ def sf_homework_part_1(homework):
 
 
 def sf_homework_part_2(homework):
-    lists = [SnailfishNumber.from_list(ast.literal_eval(line)) for line in homework.split()]
+    lists = [SnailfishNumber.from_str(line) for line in homework.split()]
     max_val = 0
     for sn1, sn2 in itertools.permutations(lists, 2):
         result = sn1 + sn2

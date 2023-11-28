@@ -1,6 +1,11 @@
 from day_18 import process
 
 
+def test_parse():
+    sf = process.SnailfishNumber.from_str("[[[[[9, 8], 1], 2], 3], 4]")
+    assert sf == process.SnailfishNumber.from_list([[[[[9, 8], 1], 2], 3], 4])
+
+
 def test_explode_example_1():
     sf1 = process.SnailfishNumber.from_list([[[[[9, 8], 1], 2], 3], 4])
     assert sf1 == process.SnailfishNumber.from_list([[[[0, 9], 2], 3], 4])
