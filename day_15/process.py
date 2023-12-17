@@ -1,6 +1,5 @@
 import dataclasses
-
-import networkx as nx
+import heapq
 
 
 @dataclasses.dataclass(frozen=True)
@@ -10,6 +9,12 @@ class Coords:
 
     def __add__(self, other):
         return Coords(self.x + other.x, self.y + other.y)
+
+
+@dataclasses.dataclass(frozen=True, order=True)
+class PrioritisedItem:
+    total_risk: int
+    location: Coords = dataclasses.field(compare=False)
 
 
 OFFSETS = [
@@ -34,26 +39,15 @@ class Chiton:
         self._height = len(self._chiton_map)
         self._width = len(self._chiton_map[0])
 
-        self._chiton_graph = nx.DiGraph()
+        self._chiton_graph = {}
 
         for y, row in enumerate(self._chiton_map):
-            for x, _ in enumerate(row):
+            for x, risk in enumerate(row):
                 coord = Coords(x, y)
-                neighbour_coords = self._get_neighbours(coord)
-                for neighbour_coord in neighbour_coords:
-                    self._chiton_graph.add_edge(
-                        coord,
-                        neighbour_coord,
-                        weight=self._chiton_map[neighbour_coord.y][neighbour_coord.x]
-                    )
+                self._chiton_graph[coord] = risk
 
-    def _get_neighbours(self, coord):
-        neighbour_coords = []
-        for offset in OFFSETS:
-            neighbour_coord = coord + offset
-            if 0 <= neighbour_coord.x < self._width and 0 <= neighbour_coord.y < self._height:
-                neighbour_coords.append(neighbour_coord)
-        return neighbour_coords
+        self.source = Coords(0, 0)
+        self.target = Coords(self._width - 1, self._height - 1)
 
     def _add_risks(self, num1, num2):
         val = num1 + num2
@@ -83,13 +77,39 @@ class Chiton:
         with open('input.txt') as f:
             return cls(f.read().strip(), let_the_expansion_begin)
 
+    def _get_neighbours(self, coord):
+        neighbour_coords = []
+        for offset in OFFSETS:
+            neighbour_coord = coord + offset
+            if 0 <= neighbour_coord.x < self._width and 0 <= neighbour_coord.y < self._height:
+                neighbour_coords.append(neighbour_coord)
+        return neighbour_coords
+
     def shortest_path_length(self):
-        return nx.shortest_path_length(
-            self._chiton_graph,
-            source=Coords(0, 0),
-            target=Coords(self._width - 1, self._height - 1),
-            weight='weight',
-        )
+        visited: set[Coords] = set()
+        costs: dict[Coords, int] = {self.source: 0}
+        q: list[PrioritisedItem] = []
+
+        heapq.heappush(q, PrioritisedItem(0, self.source))
+
+        while q:
+            item = heapq.heappop(q)
+            if (location := item.location) in visited:
+                continue
+            visited.add(location)
+            if location == self.target:
+                break
+            for neighbour in self._get_neighbours(location):
+                if neighbour in visited:
+                    continue
+                risk_level = self._chiton_graph[neighbour]
+                old_cost = costs.get(neighbour)
+                new_cost = costs[location] + risk_level
+                if old_cost is None or new_cost < old_cost:
+                    heapq.heappush(q, PrioritisedItem(new_cost, neighbour))
+                    costs[neighbour] = new_cost
+
+        return costs[self.target]
 
 
 def main():
