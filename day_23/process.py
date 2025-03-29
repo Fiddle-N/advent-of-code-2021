@@ -83,14 +83,9 @@ class AmphipodCounterMixin:
         return f"<{type(self).__name__}: type={self.type.name}, id={self.id}>"
 
 
-AMPHIPOD_HASH_CALLS = 0
-
-
 class Amphipod(AmphipodCounterMixin):
 
     def __hash__(self):
-        global AMPHIPOD_HASH_CALLS
-        AMPHIPOD_HASH_CALLS += 1
         return hash((self.type, self.id))
 
     def __eq__(self, other):
@@ -134,7 +129,7 @@ class AmphipodConfiguration:
     energy: int
     amphipods: dict[Coords, Amphipod] = dataclasses.field(compare=False)
     amphipods_state: dict[Amphipod, BurrowAmphipodState] = dataclasses.field(compare=False)
-    history: set[tuple[Amphipod, Coords]] = dataclasses.field(default_factory=set)
+    history: frozenset[tuple[Amphipod, Coords]] = dataclasses.field(default_factory=frozenset)
 
     @property
     def diagram(self):
@@ -287,7 +282,16 @@ class BurrowMapGenerator:
 
 
 class AmphipodOrganiser:
-    def __init__(self, burrow_start):
+    def __init__(self, burrow_start_input, unfolded=False):
+        burrow_start = burrow_start_input.splitlines()
+        if unfolded:
+            burrow_start = (
+                    burrow_start[:3]
+                    + """\
+  #D#C#B#A#
+  #D#B#A#C#""".splitlines()
+                    + burrow_start[3:]
+            )
         amphipods = self._find_amphipods(burrow_start)
         amphipod_rows = len(amphipods) // AMPHIPODS_PER_ROW
 
@@ -306,7 +310,7 @@ class AmphipodOrganiser:
 
     def _find_amphipods(self, burrow_start):
         amphipods: dict[Coords, Amphipod] = {}
-        for y, row in enumerate(burrow_start.splitlines()):
+        for y, row in enumerate(burrow_start):
             for x, raw_space in enumerate(row):
                 try:
                     space = AmphipodType(raw_space)
@@ -364,9 +368,18 @@ class AmphipodOrganiser:
         else:
             return None
 
-    def _path_details(self, state, amphipod_coord: Coords, dest_coord: Coords):
+    def _is_free_path(self, state, intrapath_coords):
+        amphipods = state.amphipods
+        free_path = not any(intrapath_coord in amphipods for intrapath_coord in intrapath_coords)
+        return free_path
+
+    def _intrapath_coords(self, amphipod_coord, dest_coord):
         intrapath_coords = self.burrow_map.path_coords(amphipod_coord, dest_coord, exclude_start=True)
-        free_path = not any(intrapath_coord in state.amphipods for intrapath_coord in intrapath_coords)
+        return intrapath_coords
+
+    def _path_details(self, state, amphipod_coord: Coords, dest_coord: Coords):
+        intrapath_coords = self._intrapath_coords(amphipod_coord, dest_coord)
+        free_path = self._is_free_path(state, intrapath_coords)
         distance = len(intrapath_coords)
         return free_path, distance
 
@@ -375,8 +388,8 @@ class AmphipodOrganiser:
         amphipod = next_amphipods.pop(old_coord)
         next_amphipods[new_coord] = amphipod
 
-        next_history = state.history.copy()
-        next_history.add((amphipod, new_coord))
+        # next_history = frozenset.union(*[state.history, (amphipod, new_coord)])       # write a test to protect against this monstrosity
+        next_history = frozenset.union(*[state.history, ((amphipod, new_coord),)])
 
         next_amphipods_state = state.amphipods_state.copy()
         next_amphipods_state[amphipod] = amphipod_state
@@ -393,10 +406,9 @@ class AmphipodOrganiser:
 
     def _move_amphipod(self, state, amphipod_coord, next_coord, distance, next_amphipod_state):
         next_state = self._create_next_state(state, amphipod_coord, next_coord, distance, amphipod_state=next_amphipod_state)
-        history_frozen = frozenset(x for x in next_state.history)
-        if history_frozen in self._cache:
+        if (next_history := next_state.history) in self._cache:
             return False
-        self._cache.add(history_frozen)
+        self._cache.add(next_history)
         self._dfs(next_state)
         return True
 
@@ -444,7 +456,7 @@ def main():
     ao = AmphipodOrganiser.read_file()
     total_energy = ao.organise()
     print(f'{total_energy=}')
-    print(f'{AMPHIPOD_HASH_CALLS=:,}')
+
 
 if __name__ == '__main__':
     import timeit

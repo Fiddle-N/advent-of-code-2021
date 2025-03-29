@@ -13,6 +13,17 @@ def test():
     assert total_energy == 12_521
 
 
+def test_unfolded():
+    ao = process.AmphipodOrganiser("""\
+#############
+#...........#
+###B#C#B#D###
+  #A#D#C#A#
+  #########  """, unfolded=True)
+    total_energy = ao.organise()
+    assert total_energy == 44169
+
+
 def test_small():
     ao = process.AmphipodOrganiser("""\
 #############
