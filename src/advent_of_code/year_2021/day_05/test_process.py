@@ -1,4 +1,4 @@
-from src.advent_of_code.year_2021.day_05 import process
+from advent_of_code.year_2021.day_05 import process
 
 
 def test_hydrothermal_venture():

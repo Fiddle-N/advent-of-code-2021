@@ -1,5 +1,5 @@
-from src.advent_of_code.year_2021.day_21 import process_2
-from src.advent_of_code.year_2021.day_21 import process
+from advent_of_code.year_2021.day_21 import process_2
+from advent_of_code.year_2021.day_21 import process
 
 
 def test_practice_game():

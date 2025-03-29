@@ -2,7 +2,7 @@ import collections
 
 import more_itertools
 
-from src.advent_of_code.year_2021.day_14 import process
+from advent_of_code.year_2021.day_14 import process
 
 
 def test_polymer():

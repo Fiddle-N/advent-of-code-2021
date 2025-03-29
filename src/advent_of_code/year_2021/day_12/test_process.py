@@ -1,4 +1,4 @@
-from src.advent_of_code.year_2021.day_12 import process
+from advent_of_code.year_2021.day_12 import process
 
 
 def test_passage_pathing_small_example_all_paths():

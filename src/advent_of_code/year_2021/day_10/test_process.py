@@ -1,4 +1,4 @@
-from src.advent_of_code.year_2021.day_10 import process
+from advent_of_code.year_2021.day_10 import process
 
 
 def test_navigation_subsystem_system_error_score():

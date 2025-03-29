@@ -1,4 +1,4 @@
-from src.advent_of_code.year_2021.day_08 import process
+from advent_of_code.year_2021.day_08 import process
 
 
 def test_seven_segment_search_unique():

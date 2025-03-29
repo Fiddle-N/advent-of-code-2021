@@ -1,4 +1,4 @@
-from src.advent_of_code.year_2021.day_20 import process
+from advent_of_code.year_2021.day_20 import process
 
 
 def test_trench_map_enhance_twice():

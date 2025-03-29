@@ -1,5 +1,5 @@
 from day_22 import process
-from src.advent_of_code.year_2021.day_22 import process_broken, process_2
+from advent_of_code.year_2021.day_22 import process_broken, process_2
 
 
 # def test_short_example():

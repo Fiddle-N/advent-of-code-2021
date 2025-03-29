@@ -1,4 +1,4 @@
-from src.advent_of_code.year_2021.day_07 import process
+from advent_of_code.year_2021.day_07 import process
 
 
 def test_crab_alignment_linear():

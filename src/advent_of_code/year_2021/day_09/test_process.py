@@ -1,4 +1,4 @@
-from src.advent_of_code.year_2021.day_09 import process
+from advent_of_code.year_2021.day_09 import process
 
 
 def test_smoke_basin_lowest_points_risk_level():

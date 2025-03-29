@@ -1,4 +1,4 @@
-from src.advent_of_code.year_2021.day_18 import process
+from advent_of_code.year_2021.day_18 import process
 
 
 def test_parse():
